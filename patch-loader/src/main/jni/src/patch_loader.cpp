@@ -26,7 +26,7 @@
 #include "art/runtime/jit/profile_saver.h"
 #include "art/runtime/oat_file_manager.h"
 #include "elf_util.h"
-#include "jni/bypass_sig.h"
+// LSPatch-NR: SigBypass removed
 #include "native_util.h"
 #include "symbol_cache.h"
 #include "utils/jni_helper.hpp"
@@ -86,7 +86,7 @@ void PatchLoader::InitArtHooker(JNIEnv* env, const InitInfo& initInfo) {
 
 void PatchLoader::InitHooks(JNIEnv* env) {
     Context::InitHooks(env);
-    RegisterBypass(env);
+    // LSPatch-NR: RegisterBypass removed
 }
 
 void PatchLoader::SetupEntryClass(JNIEnv* env) {

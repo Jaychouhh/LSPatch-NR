@@ -58,10 +58,8 @@
     <string name="patch_integrated_desc">Patch an app with modules embedded.\nThe patched app can run without the manager, but cannot be managed dynamically.\nIntegrated patched apps can be used on devices that do not have LSPatch Manager installed.</string>
     <string name="patch_embed_modules">Embed modules</string>
     <string name="patch_debuggable">Debuggable</string>
-    <string name="patch_sigbypass">Signature bypass</string>
-    <string name="patch_sigbypasslv0">lv0: Off</string>
-    <string name="patch_sigbypasslv1">lv1: Bypass PM</string>
-    <string name="patch_sigbypasslv2">lv2: Bypass PM + openat (libc)</string>
+    <string name="patch_noredirect">No-redirect mode</string>
+    <string name="patch_noredirect_desc">Skip runtime IO redirection. Use this when the target APK has been processed by an external signature-bypass / resign tool. Implies inject-dex. Built-in signature bypass is removed.</string>
     <string name="patch_override_version_code">Override version code</string>
     <string name="patch_override_version_code_desc">Override the patched app\'s version code to 1\nThis allows downgrade installation in the future, and generally this will not affect the version code actually perceived by the application</string>
     <string name="patch_start">Start Patch</string>

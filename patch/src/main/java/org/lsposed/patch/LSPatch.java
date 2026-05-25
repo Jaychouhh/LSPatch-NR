@@ -25,7 +25,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.lsposed.lspatch.share.Constants;
 import org.lsposed.lspatch.share.LSPConfig;
 import org.lsposed.lspatch.share.PatchConfig;
-import org.lsposed.patch.util.ApkSignatureHelper;
 import org.lsposed.patch.util.JavaLogger;
 import org.lsposed.patch.util.Logger;
 import org.lsposed.patch.util.ManifestParser;
@@ -75,11 +74,11 @@ public class LSPatch {
     @Parameter(names = {"-d", "--debuggable"}, description = "Set app to be debuggable")
     private boolean debuggableFlag = false;
 
-    @Parameter(names = {"-l", "--sigbypasslv"}, description = "Signature bypass level. 0 (disable), 1 (pm), 2 (pm+openat). default 0")
-    private int sigbypassLevel = 0;
-
-    @Parameter(names = {"--injectdex"}, description = "Inject directly the loder dex file into the original application package")
+    @Parameter(names = {"--injectdex"}, description = "Inject the loader dex into the original APK (implied by --noredirect)")
     private boolean injectDex = false;
+
+    @Parameter(names = {"-n", "--noredirect"}, description = "No-redirect mode: skip runtime IO redirection and origin.apk embedding. Implies --injectdex. Use external tools for signature bypass.")
+    private boolean noRedirect = false;
 
     @Parameter(names = {"-k", "--keystore"}, arity = 4, description = "Set custom signature keystore. Followed by 4 arguments: keystore path, keystore password, keystore alias, keystore alias password")
     private List<String> keystoreArgs = Arrays.asList(null, "123456", "key0", "123456");
@@ -128,6 +127,11 @@ public class LSPatch {
         if (!modules.isEmpty() && useManager) {
             logger.e("Should not use --embed and --manager at the same time\n");
             help = true;
+        }
+        if (noRedirect) {
+            // noRedirect requires the original APK's dex/resources to be reused in place,
+            // which is exactly what injectDex does.
+            injectDex = true;
         }
 
         this.logger = logger;
@@ -208,14 +212,7 @@ public class LSPatch {
                 throw new PatchError("Failed to register signer", e);
             }
 
-            String originalSignature = null;
-            if (sigbypassLevel > 0) {
-                originalSignature = ApkSignatureHelper.getApkSignInfo(srcApkFile.getAbsolutePath());
-                if (originalSignature == null || originalSignature.isEmpty()) {
-                    throw new PatchError("get original signature failed");
-                }
-                logger.d("Original signature\n" + originalSignature);
-            }
+            // LSPatch-NR: built-in SigBypass removed. Use external resigning tools if needed.
 
             // copy out manifest file from zlib
             var manifestEntry = srcZFile.get(ANDROID_MANIFEST_XML);
@@ -250,7 +247,7 @@ public class LSPatch {
 
             logger.i("Patching apk...");
             // modify manifest
-            final var config = new PatchConfig(useManager, debuggableFlag, overrideVersionCode, sigbypassLevel, originalSignature, appComponentFactory);
+            final var config = new PatchConfig(useManager, debuggableFlag, overrideVersionCode, noRedirect, appComponentFactory);
             final var configBytes = new Gson().toJson(config).getBytes(StandardCharsets.UTF_8);
             final var metadata = Base64.getEncoder().encodeToString(configBytes);
             try (var is = new ByteArrayInputStream(modifyManifestFile(manifestEntry.open(), metadata, minSdkVersion))) {

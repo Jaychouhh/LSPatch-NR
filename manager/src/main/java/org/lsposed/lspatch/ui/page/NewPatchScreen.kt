@@ -271,14 +271,6 @@ private fun ConfiguringFab() {
 }
 
 @Composable
-private fun sigBypassLvStr(level: Int) = when (level) {
-    0 -> stringResource(R.string.patch_sigbypasslv0)
-    1 -> stringResource(R.string.patch_sigbypasslv1)
-    2 -> stringResource(R.string.patch_sigbypasslv2)
-    else -> throw IllegalArgumentException("Invalid sigBypassLv: $level")
-}
-
-@Composable
 private fun PatchOptionsBody(modifier: Modifier, onAddEmbed: () -> Unit) {
     val viewModel = viewModel<NewPatchViewModel>()
 
@@ -346,34 +338,17 @@ private fun PatchOptionsBody(modifier: Modifier, onAddEmbed: () -> Unit) {
             desc = stringResource(R.string.patch_inject_dex_desc)
         )
 
-        var bypassExpanded by remember { mutableStateOf(false) }
-        AnywhereDropdown(
-            expanded = bypassExpanded,
-            onDismissRequest = { bypassExpanded = false },
-            onClick = { bypassExpanded = true },
-            surface = {
-                SettingsItem(
-                    icon = Icons.Outlined.RemoveModerator,
-                    title = stringResource(R.string.patch_sigbypass),
-                    desc = sigBypassLvStr(viewModel.sigBypassLevel)
-                )
-            }
-        ) {
-            repeat(3) {
-                DropdownMenuItem(
-                    text = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(selected = viewModel.sigBypassLevel == it, onClick = { viewModel.sigBypassLevel = it })
-                            Text(sigBypassLvStr(it))
-                        }
-                    },
-                    onClick = {
-                        viewModel.sigBypassLevel = it
-                        bypassExpanded = false
-                    }
-                )
-            }
-        }
+        SettingsCheckBox(
+            modifier = Modifier.clickable {
+                viewModel.noRedirect = !viewModel.noRedirect
+                // noRedirect implies injectDex
+                if (viewModel.noRedirect) viewModel.injectDex = true
+            },
+            checked = viewModel.noRedirect,
+            icon = Icons.Outlined.RemoveModerator,
+            title = stringResource(R.string.patch_noredirect),
+            desc = stringResource(R.string.patch_noredirect_desc)
+        )
     }
 }
 

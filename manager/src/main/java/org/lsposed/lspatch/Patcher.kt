@@ -26,9 +26,9 @@ object Patcher {
                 addAll(apkPaths)
                 add("-o"); add(lspApp.tmpApkDir.absolutePath)
                 if (config.debuggable) add("-d")
-                add("-l"); add(config.sigBypassLevel.toString())
                 if (config.useManager) add("--manager")
                 if (config.overrideVersionCode) add("-r")
+                if (config.noRedirect) add("--noredirect")
                 if (Configs.detailPatchLogs) add("-v")
                 embeddedModules?.forEach {
                     add("-m"); add(it)

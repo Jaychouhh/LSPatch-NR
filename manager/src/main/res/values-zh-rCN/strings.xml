@@ -56,10 +56,8 @@
     <string name="patch_integrated_desc">修补 App 并内置模块。\n经修补的应用可以在没有管理器的情况下运行，但不能动态管理配置。\n以集成模式修补的应用可在未安装 LSPatch 管理器的设备上运行。</string>
     <string name="patch_embed_modules">嵌入模块</string>
     <string name="patch_debuggable">可调试</string>
-    <string name="patch_sigbypass">破解签名校验</string>
-    <string name="patch_sigbypasslv0">lv0: 关闭</string>
-    <string name="patch_sigbypasslv1">lv1: 绕过 PM</string>
-    <string name="patch_sigbypasslv2">lv2: 绕过 PM + openat (libc)</string>
+    <string name="patch_noredirect">无重定向模式</string>
+    <string name="patch_noredirect_desc">运行时不进行 IO 重定向。当目标 APK 已被外部过签 / 重签名工具处理过时启用此项。自动启用 inject-dex。已移除内置签名绕过功能。</string>
     <string name="patch_override_version_code">覆写版本号</string>
     <string name="patch_override_version_code_desc">将修补的 App 版本号重写为 1\n这将允许后续降级安装，并且通常来说这不会影响应用实际感知到的版本号</string>
     <string name="patch_start">开始修补</string>

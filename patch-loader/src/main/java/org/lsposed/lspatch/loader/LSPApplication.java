@@ -45,11 +45,12 @@ import hidden.HiddenApiBridge;
 
 /**
  * Created by Windysha
+ * Modified for LSPatch-NR (No-Redirect fork)
  */
 @SuppressWarnings("unused")
 public class LSPApplication {
 
-    private static final String TAG = "LSPatch";
+    private static final String TAG = "LSPatch-NR";
     private static final int FIRST_APP_ZYGOTE_ISOLATED_UID = 90000;
     private static final int PER_USER_RANGE = 100000;
 
@@ -58,6 +59,7 @@ public class LSPApplication {
     private static LoadedApk appLoadedApk;
 
     private static JSONObject config;
+    private static boolean noRedirect;
 
     public static boolean isIsolated() {
         return (android.os.Process.myUid() % PER_USER_RANGE) >= FIRST_APP_ZYGOTE_ISOLATED_UID;
@@ -92,10 +94,15 @@ public class LSPApplication {
         LSPLoader.initModules(appLoadedApk);
         Log.i(TAG, "Modules initialized");
 
-        switchAllClassLoader();
-        SigBypass.doSigBypass(context, config.optInt("sigBypassLevel"));
+        if (!noRedirect) {
+            switchAllClassLoader();
+        }
 
-        Log.i(TAG, "LSPatch bootstrap completed");
+        // NOTE: LSPatch-NR removes built-in signature bypass entirely.
+        // Use external resigning / signature-bypass tools (e.g. MT/NP manager)
+        // before or after LSPatch-NR if the target app verifies its signature.
+
+        Log.i(TAG, "LSPatch-NR bootstrap completed (noRedirect=" + noRedirect + ")");
     }
 
     private static Context createLoadedApkWithContext() {
@@ -115,7 +122,40 @@ public class LSPApplication {
                 return null;
             }
             Log.i(TAG, "Use manager: " + config.optBoolean("useManager"));
-            Log.i(TAG, "Signature bypass level: " + config.optInt("sigBypassLevel"));
+            noRedirect = config.optBoolean("noRedirect", false);
+            Log.i(TAG, "noRedirect: " + noRedirect);
+
+            // appComponentFactory is still applied even in noRedirect mode,
+            // because the metaloader stub replaced it in manifest and the original
+            // factory must be restored so framework can instantiate components.
+            if (config.has("appComponentFactory")) {
+                appInfo.appComponentFactory = config.optString("appComponentFactory");
+            }
+
+            if (noRedirect) {
+                // ===== LSPatch-NR no-redirect path =====
+                // Keep ApplicationInfo untouched. The installed APK already contains
+                // all original dex (injected as classes<N>.dex by patcher) plus the
+                // metaloader stub. The stub LoadedApk IS the app LoadedApk.
+                Log.i(TAG, "no-redirect mode, using installed APK: " + appInfo.sourceDir);
+                appLoadedApk = stubLoadedApk;
+
+                var context = (Context) XposedHelpers.callStaticMethod(
+                        Class.forName("android.app.ContextImpl"),
+                        "createAppContext", activityThread, stubLoadedApk);
+                if (config.has("appComponentFactory")) {
+                    try {
+                        context.getClassLoader().loadClass(appInfo.appComponentFactory);
+                    } catch (ClassNotFoundException e) {
+                        Log.w(TAG, "Original AppComponentFactory not found: " + appInfo.appComponentFactory);
+                        appInfo.appComponentFactory = null;
+                    }
+                }
+                return context;
+            }
+
+            // ===== Legacy redirect path (kept for backward compatibility) =====
+            Log.i(TAG, "Signature bypass is disabled in LSPatch-NR; use external tools if needed");
 
             Path originPath = Paths.get(appInfo.dataDir, "cache/lspatch/origin/");
             Path cacheApkPath;
@@ -125,9 +165,6 @@ public class LSPApplication {
 
             appInfo.sourceDir = cacheApkPath.toString();
             appInfo.publicSourceDir = cacheApkPath.toString();
-            if (config.has("appComponentFactory")) {
-                appInfo.appComponentFactory = config.optString("appComponentFactory");
-            }
 
             if (!Files.exists(cacheApkPath)) {
                 Log.i(TAG, "Extract original apk");
