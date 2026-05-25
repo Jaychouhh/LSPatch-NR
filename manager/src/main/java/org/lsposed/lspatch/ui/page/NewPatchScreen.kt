@@ -349,6 +349,13 @@ private fun PatchOptionsBody(modifier: Modifier, onAddEmbed: () -> Unit) {
             title = stringResource(R.string.patch_noredirect),
             desc = stringResource(R.string.patch_noredirect_desc)
         )
+        SettingsCheckBox(
+            modifier = Modifier.clickable { viewModel.noSign = !viewModel.noSign },
+            checked = viewModel.noSign,
+            icon = Icons.Outlined.Block,
+            title = stringResource(R.string.patch_nosign),
+            desc = stringResource(R.string.patch_nosign_desc)
+        )
     }
 }
 

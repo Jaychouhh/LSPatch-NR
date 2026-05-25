@@ -17,6 +17,7 @@ object Patcher {
 
     class Options(
         private val injectDex: Boolean,
+        private val noSign: Boolean,
         private val config: PatchConfig,
         private val apkPaths: List<String>,
         private val embeddedModules: List<String>?
@@ -29,6 +30,7 @@ object Patcher {
                 if (config.useManager) add("--manager")
                 if (config.overrideVersionCode) add("-r")
                 if (config.noRedirect) add("--noredirect")
+                if (noSign) add("--nosign")
                 if (Configs.detailPatchLogs) add("-v")
                 embeddedModules?.forEach {
                     add("-m"); add(it)

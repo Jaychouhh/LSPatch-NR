@@ -38,6 +38,7 @@ class NewPatchViewModel : ViewModel() {
     var debuggable by mutableStateOf(false)
     var overrideVersionCode by mutableStateOf(false)
     var noRedirect by mutableStateOf(true)
+    var noSign by mutableStateOf(false)
     var injectDex by mutableStateOf(false)
     var embeddedModules = emptyList<AppInfo>()
 
@@ -92,6 +93,7 @@ class NewPatchViewModel : ViewModel() {
         if (useManager) embeddedModules = emptyList()
         patchOptions = Patcher.Options(
             injectDex = injectDex,
+            noSign = noSign,
             config = PatchConfig(useManager, debuggable, overrideVersionCode, noRedirect, null),
             apkPaths = listOf(patchApp.app.sourceDir) + (patchApp.app.splitSourceDirs ?: emptyArray()),
             embeddedModules = embeddedModules.flatMap { listOf(it.app.sourceDir) + (it.app.splitSourceDirs ?: emptyArray()) }

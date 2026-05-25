@@ -86,4 +86,6 @@
     <string name="settings_detail_patch_logs">详细修补日志</string>
     <string name="patch_inject_dex">注入加载器 Dex</string>
     <string name="patch_inject_dex_desc">对那些需要孤立服务进程的应用程序，譬如说浏览器的渲染引擎，请勾选此选项以确保他们正常运行</string>
+    <string name="patch_nosign">跳过签名</string>
+    <string name="patch_nosign_desc">不对输出 APK 进行签名。当之后使用外部重签名工具时勾选此项。</string>
 </resources>

@@ -90,4 +90,6 @@
     <string name="settings_detail_patch_logs">Detail patch logs</string>
     <string name="patch_inject_dex">Inject loader dex</string>
     <string name="patch_inject_dex_desc">For applications with isolated services, such as the render engines of browsers, please turn on this option to ensure that they work properly.</string>
+    <string name="patch_nosign">Skip signing</string>
+    <string name="patch_nosign_desc">Do not sign the output APK. Use when an external resign tool will handle the signature later.</string>
 </resources>
