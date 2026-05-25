@@ -25,7 +25,11 @@ buildscript {
 
 val commitCount = run {
     val repo = FileRepository(rootProject.file(".git"))
-    val refId = repo.refDatabase.exactRef("refs/remotes/origin/master").objectId!!
+    // LSPatch-NR: try main, master, then HEAD as fallback
+    val refId = repo.refDatabase.exactRef("refs/remotes/origin/main")?.objectId
+        ?: repo.refDatabase.exactRef("refs/remotes/origin/master")?.objectId
+        ?: repo.refDatabase.exactRef("HEAD")?.objectId
+        ?: error("Cannot resolve any git ref for commit count")
     Git(repo).log().add(refId).call().count()
 }
 
