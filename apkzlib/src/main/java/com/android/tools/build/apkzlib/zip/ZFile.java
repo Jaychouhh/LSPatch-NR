@@ -696,11 +696,18 @@ public class ZFile implements Closeable {
                 "Central Directory / EOCD: " + found.getStart() + " - " + found.getEnd();
           }
 
-          throw new IOException(
-              "Cannot read entry "
+          // LSPatch-NR: Tolerate overlapping zip entries (used by some
+          // anti-LSPatch signing tools like MT enhanced / kill_fancy_sign,
+          // which hide an "origin.apk" copy at overlapping offsets).
+          // Android runtime reads via Central Directory and ignores overlaps,
+          // so we follow the same lenient behavior here.
+          System.err.println(
+              "[LSPatch-NR] Warning: skipping overlapping entry "
                   + describe.apply(entry)
-                  + " because it overlaps with "
-                  + overlappingEntryDescription);
+                  + " (overlaps with "
+                  + overlappingEntryDescription
+                  + "). This is likely an anti-tamper artifact and is safe to ignore.");
+          continue;
         }
 
         FileUseMapEntry<StoredEntry> mapEntry = map.add(start, end, entry);
