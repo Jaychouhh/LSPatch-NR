@@ -83,6 +83,9 @@ public class LSPatch {
     @Parameter(names = {"-k", "--keystore"}, arity = 4, description = "Set custom signature keystore. Followed by 4 arguments: keystore path, keystore password, keystore alias, keystore alias password")
     private List<String> keystoreArgs = Arrays.asList(null, "123456", "key0", "123456");
 
+    @Parameter(names = {"--nosign"}, description = "Do not sign the output APK. Use this when an external signing / resign tool will handle the signature.")
+    private boolean noSign = false;
+
     @Parameter(names = {"--manager"}, description = "Use manager (Cannot work with embedding modules)")
     private boolean useManager = false;
 
@@ -188,28 +191,32 @@ public class LSPatch {
              var srcZFile = dstZFile.addNestedZip((ignore) -> ORIGINAL_APK_ASSET_PATH, srcApkFile, false)) {
 
             // sign apk
-            try {
-                var keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-                if (keystoreArgs.get(0) == null) {
-                    logger.i("Register apk signer with default keystore...");
-                    try (var is = getClass().getClassLoader().getResourceAsStream("assets/keystore")) {
-                        keyStore.load(is, keystoreArgs.get(1).toCharArray());
+            if (!noSign) {
+                try {
+                    var keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+                    if (keystoreArgs.get(0) == null) {
+                        logger.i("Register apk signer with default keystore...");
+                        try (var is = getClass().getClassLoader().getResourceAsStream("assets/keystore")) {
+                            keyStore.load(is, keystoreArgs.get(1).toCharArray());
+                        }
+                    } else {
+                        logger.i("Register apk signer with custom keystore...");
+                        try (var is = new FileInputStream(keystoreArgs.get(0))) {
+                            keyStore.load(is, keystoreArgs.get(1).toCharArray());
+                        }
                     }
-                } else {
-                    logger.i("Register apk signer with custom keystore...");
-                    try (var is = new FileInputStream(keystoreArgs.get(0))) {
-                        keyStore.load(is, keystoreArgs.get(1).toCharArray());
-                    }
+                    var entry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(keystoreArgs.get(2), new KeyStore.PasswordProtection(keystoreArgs.get(3).toCharArray()));
+                    new SigningExtension(SigningOptions.builder()
+                            .setMinSdkVersion(28)
+                            .setV2SigningEnabled(true)
+                            .setCertificates((X509Certificate[]) entry.getCertificateChain())
+                            .setKey(entry.getPrivateKey())
+                            .build()).register(dstZFile);
+                } catch (Exception e) {
+                    throw new PatchError("Failed to register signer", e);
                 }
-                var entry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(keystoreArgs.get(2), new KeyStore.PasswordProtection(keystoreArgs.get(3).toCharArray()));
-                new SigningExtension(SigningOptions.builder()
-                        .setMinSdkVersion(28)
-                        .setV2SigningEnabled(true)
-                        .setCertificates((X509Certificate[]) entry.getCertificateChain())
-                        .setKey(entry.getPrivateKey())
-                        .build()).register(dstZFile);
-            } catch (Exception e) {
-                throw new PatchError("Failed to register signer", e);
+            } else {
+                logger.i("Skipping APK signing (--nosign enabled). Output will be unsigned.");
             }
 
             // LSPatch-NR: built-in SigBypass removed. Use external resigning tools if needed.
