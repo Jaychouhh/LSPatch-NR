@@ -352,7 +352,7 @@ private fun PatchOptionsBody(modifier: Modifier, onAddEmbed: () -> Unit) {
         SettingsCheckBox(
             modifier = Modifier.clickable { viewModel.noSign = !viewModel.noSign },
             checked = viewModel.noSign,
-            icon = Icons.Outlined.Block,
+            icon = Icons.Outlined.RemoveCircleOutline,
             title = stringResource(R.string.patch_nosign),
             desc = stringResource(R.string.patch_nosign_desc)
         )
